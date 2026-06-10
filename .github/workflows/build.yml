@@ -19,7 +19,7 @@ jobs:
             platform: mac
             artifact_name: LocalOS-mac
             artifact_path: release/*.dmg
-          - os: windows-latest
+          - os: windows-2022
             platform: win
             artifact_name: LocalOS-win
             artifact_path: release/*.exe

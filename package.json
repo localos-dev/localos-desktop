@@ -2,6 +2,7 @@
   "name": "localos-desktop",
   "version": "0.1.0",
   "description": "LocalOS Desktop. AI that works without the internet.",
+  "author": "localos-dev",
   "main": "dist/main.js",
   "private": true,
   "scripts": {
@@ -21,5 +22,8 @@
     "electron": "^34.0.0",
     "electron-builder": "^25.1.8",
     "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["electron"]
   }
 }
