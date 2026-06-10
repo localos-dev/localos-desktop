@@ -1,0 +1,25 @@
+{
+  "name": "localos-desktop",
+  "version": "0.1.0",
+  "description": "LocalOS Desktop. AI that works without the internet.",
+  "main": "dist/main.js",
+  "private": true,
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "package": "electron-builder",
+    "package:mac": "electron-builder --mac",
+    "package:win": "electron-builder --win",
+    "package:linux": "electron-builder --linux",
+    "dev": "NODE_ENV=development electron ."
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.0.0",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,112 @@
+name: Build Desktop App
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+            artifact_name: LocalOS-mac
+            artifact_path: release/*.dmg
+          - os: windows-latest
+            platform: win
+            artifact_name: LocalOS-win
+            artifact_path: release/*.exe
+
+    runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store path
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('package.json') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Compile TypeScript
+        run: pnpm run compile
+
+      - name: Package app
+        run: pnpm run package:${{ matrix.platform }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-files
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "LocalOS Desktop ${{ github.ref_name }}"
+          body: |
+            LocalOS Desktop ${{ github.ref_name }}
+
+            LocalOS Desktop is in early access. The app is fully functional and ready to use. As an early release, you may encounter occasional bugs. Updates ship automatically.
+
+            Installation
+
+            macOS: Download the .dmg file, open it, and drag LocalOS to your Applications folder. On first launch, if you see a security warning, right-click the app and choose Open.
+
+            Windows: Download and run the .exe installer. If Windows SmartScreen shows a warning, click More info then Run anyway.
+
+            After installing, open the app, go to the Models page, download a model once, then you can use LocalOS fully offline.
+
+            Report issues at https://github.com/localos-dev/localos-desktop/issues
+          files: release-files/**/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
